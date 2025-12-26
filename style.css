@@ -1070,3 +1070,57 @@ footer {
         max-height: 200px;
     }
 }
+.post-body h3 {
+    font-family: 'Inter', sans-serif !important; /* Bắt buộc dùng font Inter */
+    font-weight: 700;        /* In đậm vừa phải, không quá dày */
+    font-size: 26px;         /* Tăng kích thước lên chút cho rõ ràng */
+    color: var(--primary);   /* Giữ màu tím chủ đạo */
+    margin-top: 50px;        /* Cách xa đoạn trên để thoáng mắt */
+    margin-bottom: 20px;
+    line-height: 1.4;        /* Khoảng cách dòng thoáng hơn */
+    letter-spacing: -0.5px;  /* Thu hẹp khoảng cách chữ xíu cho chặt chẽ */
+    border-bottom: none;     /* Bỏ gạch chân nét đứt cũ nếu thấy rối */
+    position: relative;
+    padding-left: 15px;      /* Thụt vào để có điểm nhấn bên trái */
+}
+
+/* Tạo đường gạch dọc trang trí bên trái tiêu đề (giống Medium/Dev.to) */
+.post-body h3::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    bottom: 5px;
+    width: 4px;
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+/* 2. Chữ in đậm (strong) */
+.post-body strong, .post-body b {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600;
+    color: var(--white); /* Màu trắng nổi bật trên nền tối */
+}
+
+/* 3. Đoạn văn thường (p) */
+.post-body p {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 18px;
+    color: #C3C7D1; /* Màu xám sáng, dịu mắt hơn màu trắng tinh */
+    line-height: 1.8; /* Giãn dòng rộng để dễ đọc giống sách */
+    margin-bottom: 25px;
+}
+
+/* 4. Danh sách (ul, li) */
+.post-body ul, .post-body ol {
+    font-family: 'Inter', sans-serif !important;
+    margin-bottom: 30px;
+    padding-left: 25px;
+}
+
+.post-body li {
+    margin-bottom: 10px;
+    line-height: 1.7;
+    color: #C3C7D1;
+}
