@@ -3,15 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post - Big Duck</title>
+    <title>Post - Từ Minh Đức</title>
+    <link rel="icon" type="image/png" href="images/logo/favicon.png"> 
+    
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" 
+        src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v18.0" 
+        nonce="Avx8j3s1">
+    </script>
+
     <div class="container">
         <header>
-            <div class="logo"><img src="images/logo/logo.png" alt="Logo" class="logo-img"><span>Big Duck</span></div>
+            <div class="logo"><img src="images/logo/logo.png" alt="Logo" class="logo-img"><span>Từ Minh Đức</span></div>
             <nav>
                 <ul><li><a href="blog.html"><span class="hash"><</span> back-to-blog</a></li></ul>
             </nav>
@@ -33,13 +41,25 @@
             <div class="post-divider"></div>
 
             <div id="post-content" class="post-body font-text">
+            </div>
+
+            <div class="comment-section">
+                <h3 style="margin-top: 40px; margin-bottom: 20px; font-family: 'Inter', sans-serif; color: var(--white);">
+                    Bình luận
+                </h3>
+                <div class="fb-comments" 
+                     data-href="" 
+                     data-width="100%" 
+                     data-numposts="5"
+                     data-colorscheme="dark">
                 </div>
+            </div>
         </article>
 
         <section class="related-section">
             <h3 class="related-title">Bài viết liên quan</h3>
             <div id="related-list" class="related-grid">
-                </div>
+            </div>
         </section>
 
         <footer>
@@ -56,11 +76,24 @@
         if (post) {
             // Load nội dung bài hiện tại
             document.title = post.title + " - Duc's Blog";
-            document.getElementById('post-image').src = post.image; // Load ảnh bìa
+            document.getElementById('post-image').src = post.image;
             document.getElementById('post-title').innerText = post.title;
             document.getElementById('post-date').innerText = post.date;
             document.getElementById('post-category').innerText = post.category.toUpperCase();
             document.getElementById('post-content').innerHTML = post.content;
+
+            // --- 3. CẤU HÌNH FACEBOOK COMMENT (TỰ ĐỘNG CẬP NHẬT LINK) ---
+            const fbCommentBox = document.querySelector('.fb-comments');
+            if (fbCommentBox) {
+                // Gán link hiện tại của trình duyệt vào data-href
+                fbCommentBox.setAttribute('data-href', window.location.href);
+                
+                // Bắt Facebook tải lại khung comment
+                if (window.FB) {
+                    FB.XFBML.parse();
+                }
+            }
+            // -------------------------------------------------------------
 
             // --- XỬ LÝ BÀI LIÊN QUAN (RELATED POSTS) ---
             const relatedContainer = document.getElementById('related-list');
@@ -94,17 +127,17 @@
             document.getElementById('post-image').style.display = 'none';
         }
     </script>
+    
     <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Tạo thẻ canvas
         var canvas = document.createElement("canvas");
         canvas.style.position = "fixed";
         canvas.style.top = "0";
         canvas.style.left = "0";
         canvas.style.width = "100%";
         canvas.style.height = "100%";
-        canvas.style.pointerEvents = "none"; // Để tuyết không chặn chuột click
-        canvas.style.zIndex = "9999"; // Đè lên mọi thứ (nếu muốn tuyết rơi sau chữ thì đổi thành -1)
+        canvas.style.pointerEvents = "none";
+        canvas.style.zIndex = "9999";
         document.body.appendChild(canvas);
 
         var ctx = canvas.getContext("2d");
@@ -113,24 +146,21 @@
         canvas.width = width;
         canvas.height = height;
 
-        // Cấu hình số lượng và tốc độ tuyết
-        var maxFlakes = 100; // Số lượng bông tuyết (giảm nếu lag)
+        var maxFlakes = 100;
         var flakes = [];
 
-        // Tạo mảng bông tuyết
         for (var i = 0; i < maxFlakes; i++) {
             flakes.push({
                 x: Math.random() * width,
                 y: Math.random() * height,
-                r: Math.random() * 2 + 1, // Kích thước bông tuyết (1px - 3px)
-                d: Math.random() + 1      // Tỷ trọng (tốc độ rơi)
+                r: Math.random() * 2 + 1,
+                d: Math.random() + 1
             });
         }
 
-        // Hàm vẽ tuyết
         function drawFlakes() {
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.8)"; // Màu trắng, hơi mờ
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.beginPath();
             
             for (var i = 0; i < maxFlakes; i++) {
@@ -142,18 +172,14 @@
             moveFlakes();
         }
 
-        // Hàm di chuyển tuyết
         var angle = 0;
         function moveFlakes() {
             angle += 0.01;
             for (var i = 0; i < maxFlakes; i++) {
                 var f = flakes[i];
-                
-                // Cập nhật vị trí Y (rơi xuống) và X (lắc lư theo gió)
-                f.y += Math.pow(f.d, 2) + 1; // Tốc độ rơi
+                f.y += Math.pow(f.d, 2) + 1;
                 f.x += Math.sin(angle) * 2;
 
-                // Nếu tuyết rơi xuống đáy, đưa nó lên lại đỉnh
                 if (f.y > height) {
                     flakes[i] = {
                         x: Math.random() * width,
@@ -165,10 +191,8 @@
             }
         }
 
-        // Vòng lặp animation
         setInterval(drawFlakes, 25);
 
-        // Xử lý khi co giãn màn hình
         window.onresize = function() {
             width = window.innerWidth;
             height = window.innerHeight;
@@ -176,6 +200,6 @@
             canvas.height = height;
         }
     });
-</script>
+    </script>
 </body>
 </html>

@@ -1124,3 +1124,59 @@ footer {
     line-height: 1.7;
     color: #C3C7D1;
 }
+/* --- FOOTER MEDIA ICONS --- */
+
+.footer-title {
+    color: var(--white);
+    margin-bottom: 15px; /* Tạo khoảng cách với icon */
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Khung chứa các icon */
+.social-links {
+    display: flex;
+    gap: 15px; /* Khoảng cách giữa các icon */
+}
+
+/* Định dạng Icon để luôn CÙNG 1 SIZE */
+.social-icon {
+    display: flex;              /* Giúp căn giữa SVG bên trong */
+    align-items: center;
+    justify-content: center;
+    
+    /* 👉 CHỈNH SIZE Ở ĐÂY */
+    width: 24px;   
+    height: 24px;
+    
+    /* Màu sắc */
+    color: var(--gray);         /* Màu mặc định (xám) */
+    transition: 0.3s ease;      /* Hiệu ứng mượt mà */
+}
+
+/* Định dạng thẻ SVG bên trong */
+.social-icon svg {
+    width: 100%;               /* Luôn giãn đầy khung cha (24px) */
+    height: 100%;
+    fill: currentColor;        /* Lấy màu từ thuộc tính color của cha */
+}
+
+/* Hiệu ứng khi di chuột vào */
+.social-icon:hover {
+    color: var(--white);       /* Đổi sang màu trắng sáng */
+    transform: translateY(-3px); /* Nảy lên nhẹ */
+}
+.comment-section {
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 1px solid var(--gray);
+    background-color: #fff; /* Facebook comment cần nền trắng để dễ nhìn nhất, hoặc bạn phải chỉnh dark mode plugin */
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.comment-section h3 {
+    color: #333; /* Chữ màu tối vì nền trắng */
+    margin-bottom: 20px;
+    font-family: 'Inter', sans-serif;
+}
