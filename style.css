@@ -1016,3 +1016,57 @@ footer {
     .timeline { margin-left: 5px; padding-left: 20px; }
     .timeline-dot { left: -27px; }
 }
+/* --- CẬP NHẬT TIMELINE CÓ ẢNH --- */
+
+/* Hàng ngang chứa Chữ và Ảnh */
+.timeline-row {
+    display: flex;
+    justify-content: space-between; /* Đẩy 2 bên ra xa nhau */
+    gap: 30px; /* Khoảng cách giữa chữ và ảnh */
+    align-items: flex-start; /* Căn thẳng hàng bên trên */
+}
+
+/* Phần Chữ (Bên trái) */
+.timeline-text {
+    flex: 1; /* Chiếm phần lớn không gian */
+}
+
+/* Phần Ảnh (Bên phải) */
+.timeline-proof {
+    flex-shrink: 0; /* Không bị co lại khi màn hình nhỏ */
+    width: 200px;   /* Chiều rộng cố định của ảnh minh chứng */
+}
+
+.timeline-proof img {
+    width: 100%;
+    height: 120px; /* Chiều cao cố định */
+    object-fit: cover; /* Cắt ảnh gọn gàng */
+    border-radius: 6px;
+    border: 1px solid var(--gray);
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+/* Hiệu ứng khi di chuột vào ảnh: Phóng to nhẹ */
+.timeline-proof img:hover {
+    transform: scale(1.05);
+    border-color: var(--primary);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* Responsive Mobile: Khi màn hình nhỏ thì ảnh xuống dòng */
+@media (max-width: 768px) {
+    .timeline-row {
+        flex-direction: column; /* Xếp dọc */
+    }
+    
+    .timeline-proof {
+        width: 100%; /* Ảnh full màn hình */
+        margin-top: 15px;
+    }
+    
+    .timeline-proof img {
+        height: auto; /* Chiều cao tự do */
+        max-height: 200px;
+    }
+}
