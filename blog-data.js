@@ -427,7 +427,7 @@ message User {
      {
         id: "java-garbage-collection",
         title: "Java Garbage Collection: Người dọn rác thầm lặng và những lần 'Stop-the-world'",
-        date: "05/01/2026",
+        date: "13/12/2025",
         category: "tech",
         image: "images/blog/Java GC.png",
         summary: "Tại sao Java Server chạy mượt lúc đầu nhưng càng về sau càng chậm? Mổ xẻ cơ chế quản lý bộ nhớ Heap, Stack và nỗi ám ảnh mang tên 'Stop-the-world'.",
@@ -599,7 +599,7 @@ String result = sb.toString();</code></pre>
     {
         id: "database-connection-pooling",
         title: "Database Connection Pooling: Tại sao không nên 'new Connection' mỗi lần query?",
-        date: "02/01/2026",
+        date: "02/12/2025",
         category: "tech",
         image: "images/blog/DB Connection Pooling.png",
         summary: "Kết hợp kiến thức Networking và Database. Tại sao việc mở một kết nối database tốn kém hơn bạn nghĩ? HikariCP đã cứu rỗi hiệu năng Java Backend như thế nào?",
@@ -1136,7 +1136,7 @@ const result = await Promise.race([
     {
         id: "encoding-utf8-mystery",
         title: "Tại sao chữ 'Ư' lại biến thành hình thoi ◊? Chuyện về Encoding và Database",
-        date: "08/01/2026",
+        date: "14/12/2025",
         category: "tech",
         image: "images/blog/Encoding UTF-8 Mystery.png",
         summary: "Bạn lưu tên 'Đặng Thành Đức' vào Database, nhưng nó hiện ra 'Äá»©c' hoặc '???'. Tại sao? Cùng giải mã bí ẩn UTF-8 và utf8mb4.",
@@ -1416,4 +1416,674 @@ CREATE INDEX idx_name ON users(name(768));</code></pre>
             <p class="quote-box">Kết luận: Encoding là một trong những vấn đề "ẩn" nhất trong lập trình. Bạn có thể code ngon lành nhưng lại mất hàng giờ debug chỉ vì quên set charset. Bài học xương máu: LUÔN LUÔN chọn <code>utf8mb4</code> khi tạo Database. Đừng bao giờ tin vào mặc định. Và nhớ kiểm tra cả 7 layers: Database → Table → Connection → HTML → HTTP → Server → Source File!</p>
         `
     },
+     {
+        id: "password-hashing-salt",
+        title: "Lưu mật khẩu: Đừng bao giờ lưu Plain Text! (Hashing & Salting)",
+        date: "6/12/2026",
+        category: "tech",
+        image: "images/blog/Password Hashing and Salting.png",
+        summary: "Nếu Database bị hack, hacker có nhìn thấy mật khẩu của user là '123456' không? Phân biệt Hashing (Băm) và Encryption (Mã hóa).",
+        content: `
+            <p><strong>1. "Em lưu mật khẩu y nguyên cho dễ nhớ"</strong></p>
+            <p>Trong đồ án môn học, nhiều bạn lưu mật khẩu user vào cột <code>password</code> dạng: "iloveyou", "123456".</p>
+            <p>Nếu Hacker tấn công SQL Injection và dump được database, hắn sẽ có toàn bộ mật khẩu. Và vì user thường dùng chung 1 pass cho Facebook, Email, Bank... hậu quả là khôn lường.</p>
+
+            <p><strong>Case study thực tế: LinkedIn breach 2012</strong></p>
+            <p>Năm 2012, LinkedIn bị hack, <strong>6.5 triệu</strong> mật khẩu user bị leak. Điều tồi tệ? LinkedIn lưu password bằng SHA-1 (không có salt). Trong vòng vài giờ, hacker đã crack được <strong>90%</strong> mật khẩu.</p>
+            <p>Hậu quả: Nhiều user dùng chung password cho email, bank account → Bị hack dây chuyền.</p>
+
+            <h3>2. Hashing (Băm) khác gì Encryption (Mã hóa)?</h3>
+            
+            <p><strong>Encryption (Mã hóa) - Two-way function:</strong></p>
+            <ul>
+                <li>Biến A thành B bằng một chìa khóa (key)</li>
+                <li>Có thể dịch ngược lại từ B thành A nếu có key</li>
+                <li>Ví dụ: AES, RSA</li>
+            </ul>
+            <pre><code>// Encryption
+plaintext = "hello"
+key = "secretkey123"
+encrypted = encrypt(plaintext, key) // → "8fh3j2k1..."
+decrypted = decrypt(encrypted, key) // → "hello"</code></pre>
+
+            <p><strong>Hashing (Băm) - One-way function:</strong></p>
+            <ul>
+                <li>Biến A thành B (hash)</li>
+                <li><strong>KHÔNG THỂ</strong> dịch ngược lại từ B thành A</li>
+                <li>Giống như bạn băm thịt bò thành burger, không thể biến burger lại thành con bò</li>
+                <li>Ví dụ: MD5, SHA-256, BCrypt, Argon2</li>
+            </ul>
+            <pre><code>// Hashing
+password = "hello"
+hashed = hash(password) // → "$2a$10$N9qo8uLOickgx2ZMRZoMy..."
+
+// Không thể reverse
+unhash(hashed) // → IMPOSSIBLE!</code></pre>
+
+            <p><strong>Tại sao password phải dùng Hashing chứ không phải Encryption?</strong></p>
+            <p>Vì <strong>server không cần biết mật khẩu gốc là gì</strong>. Server chỉ cần verify: "Mật khẩu user vừa nhập có khớp với hash trong DB không?"</p>
+            <pre><code>// Login flow
+1. User nhập: password = "mypassword123"
+2. Server hash: hash("mypassword123") = "ABC123XYZ"
+3. Server so sánh: "ABC123XYZ" == hash_trong_DB ?
+4. Nếu khớp → Login thành công</code></pre>
+
+            <h3>3. Tại sao MD5 và SHA-1 đã chết?</h3>
+
+            <p><strong>MD5 (Message Digest 5) - Năm 1991:</strong></p>
+            <ul>
+                <li>Hash length: 128-bit (32 ký tự hex)</li>
+                <li>Tốc độ: CỰC NHANH (~450 MB/s)</li>
+                <li>Vấn đề: Quá nhanh → Hacker có thể brute-force dễ dàng</li>
+            </ul>
+
+            <p><strong>Ví dụ tấn công MD5:</strong></p>
+            <pre><code>MD5("123456") = "e10adc3949ba59abbe56e057f20f883e"
+
+// Hacker có sẵn Rainbow Table (bảng tra cứu):
+"e10adc3949ba59abbe56e057f20f883e" → "123456"
+// Crack ngay lập tức!</code></pre>
+
+            <p><strong>Rainbow Table là gì?</strong></p>
+            <p>Là một bảng tra cứu khổng lồ chứa sẵn millions hashes:</p>
+            <pre><code>// Rainbow table mẫu
+"5f4dcc3b5aa765d61d8327deb882cf99" → "password"
+"e10adc3949ba59abbe56e057f20f883e" → "123456"
+"25d55ad283aa400af464c76d713c07ad" → "12345678"
+...</code></pre>
+            <p>Hacker chỉ cần lookup hash → Có ngay password gốc. Tốc độ: <strong>1 billion hashes/giây</strong> với GPU hiện đại.</p>
+
+            <p><strong>SHA-1 (Secure Hash Algorithm) - Năm 1995:</strong></p>
+            <ul>
+                <li>Hash length: 160-bit (40 ký tự hex)</li>
+                <li>An toàn hơn MD5 một chút, nhưng vẫn quá nhanh</li>
+                <li>Google đã chứng minh collision attack năm 2017</li>
+            </ul>
+
+            <h3>4. Giải pháp hiện đại: Bcrypt + Salt</h3>
+
+            <p><strong>Salt (Muối) là gì?</strong></p>
+            <p>Salt là một chuỗi ngẫu nhiên thêm vào mật khẩu trước khi băm:</p>
+            <pre><code>// Không có salt
+Hash("123456") = "e10adc3949ba59abbe56e057f20f883e"
+// Tất cả users có password "123456" đều có hash giống nhau!
+
+// Có salt
+Hash("123456" + "salt_abc123") = "9f2e1c..."
+Hash("123456" + "salt_xyz789") = "7a4d3b..."
+// Hai users cùng password nhưng hash khác nhau hoàn toàn!</code></pre>
+
+            <p><strong>Bcrypt - The Industry Standard:</strong></p>
+            <ul>
+                <li>Designed to be SLOW (cost factor configurable)</li>
+                <li>Built-in salt generation (random 128-bit salt)</li>
+                <li>Output format: <code>$2a$cost$salthash</code></li>
+            </ul>
+
+            <p><strong>Anatomy of Bcrypt Hash:</strong></p>
+            <pre><code>$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+│  │  │ │                                                │
+│  │  │ └─ Salt (22 chars)                              └─ Hash (31 chars)
+│  │  └─ Cost factor (2^10 = 1024 iterations)
+│  └─ Minor version
+└─ Algorithm identifier (Bcrypt)</code></pre>
+
+            <p><strong>Cost Factor (Work Factor):</strong></p>
+            <p>Cost = 10 nghĩa là hash sẽ chạy 2^10 = 1024 rounds. Càng cao càng chậm càng an toàn:</p>
+            <ul>
+                <li><strong>Cost 10:</strong> ~100ms per hash (recommended for login)</li>
+                <li><strong>Cost 12:</strong> ~400ms per hash (more secure)</li>
+                <li><strong>Cost 14:</strong> ~1.6s per hash (very secure, but slow)</li>
+            </ul>
+
+            <p><strong>Code examples:</strong></p>
+            <pre><code>// Java
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(10); // cost = 10
+
+// Signup: Hash password
+String rawPassword = "mypassword123";
+String hashedPassword = encoder.encode(rawPassword);
+// Save to DB: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIj..."
+
+// Login: Verify password
+boolean isMatch = encoder.matches(rawPassword, hashedPassword);
+// Returns: true</code></pre>
+
+            <pre><code>// Node.js
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+// Signup
+const password = 'mypassword123';
+const hash = await bcrypt.hash(password, saltRounds);
+// Save to DB: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIj..."
+
+// Login
+const isMatch = await bcrypt.compare(password, hash);
+// Returns: true</code></pre>
+
+            <pre><code>// Python
+import bcrypt
+
+# Signup
+password = b"mypassword123"
+salt = bcrypt.gensalt(rounds=10)
+hashed = bcrypt.hashpw(password, salt)
+# Save to DB: b'$2b$10$N9qo8uLOickgx2ZMRZoMyeIj...'
+
+# Login
+isMatch = bcrypt.checkpw(password, hashed)
+# Returns: True</code></pre>
+
+            <h3>5. Argon2: The Future of Password Hashing</h3>
+
+            <p><strong>Argon2 - Winner of Password Hashing Competition 2015:</strong></p>
+            <ul>
+                <li>Có 3 variants: Argon2d (fast), Argon2i (side-channel resistant), Argon2id (hybrid - recommended)</li>
+                <li>Configurable: time cost, memory cost, parallelism</li>
+                <li>Resistant to GPU/ASIC attacks (memory-hard)</li>
+            </ul>
+
+            <p><strong>So sánh Bcrypt vs Argon2:</strong></p>
+            <table>
+                <tr><th>Feature</th><th>Bcrypt</th><th>Argon2</th></tr>
+                <tr><td>Year</td><td>1999</td><td>2015</td></tr>
+                <tr><td>Memory hard</td><td>❌</td><td>✅</td></tr>
+                <tr><td>Parallelism</td><td>❌</td><td>✅</td></tr>
+                <tr><td>GPU resistant</td><td>Moderate</td><td>Strong</td></tr>
+                <tr><td>Config options</td><td>1 (cost)</td><td>3 (time, memory, threads)</td></tr>
+                <tr><td>Industry adoption</td><td>Very high</td><td>Growing</td></tr>
+            </table>
+
+            <p><strong>Code example Argon2:</strong></p>
+            <pre><code>// Java (with Bouncy Castle)
+import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
+
+Argon2BytesGenerator generator = new Argon2BytesGenerator();
+generator.init(new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+    .withIterations(3)      // time cost
+    .withMemoryAsKB(65536)  // memory cost (64 MB)
+    .withParallelism(4)     // threads
+    .withSalt("randomsalt".getBytes())
+    .build());
+
+byte[] hash = new byte[32];
+generator.generateBytes("mypassword123".getBytes(), hash);</code></pre>
+
+            <h3>6. Common Attacks và Defense</h3>
+
+            <p><strong>Attack 1: Brute Force</strong></p>
+            <p>Hacker thử tất cả combinations: "a", "aa", "aaa", ... "zzzzz"</p>
+            <p><strong>Defense:</strong></p>
+            <ul>
+                <li>Enforce strong password policy (min 8 chars, uppercase, numbers, special chars)</li>
+                <li>Use slow hash (Bcrypt cost 12+, Argon2 with high memory)</li>
+                <li>Rate limiting: Max 5 login attempts / 15 minutes</li>
+            </ul>
+
+            <p><strong>Attack 2: Dictionary Attack</strong></p>
+            <p>Hacker dùng wordlist (millions common passwords): "password", "123456", "qwerty"...</p>
+            <p><strong>Defense:</strong></p>
+            <ul>
+                <li>Check against common password database (HaveIBeenPwned API)</li>
+                <li>Reject weak passwords during signup</li>
+            </ul>
+
+            <p><strong>Attack 3: Rainbow Table</strong></p>
+            <p>Pre-computed hash lookup table</p>
+            <p><strong>Defense:</strong></p>
+            <ul>
+                <li><strong>Salt!</strong> Rainbow tables become useless with unique salts</li>
+            </ul>
+
+            <p><strong>Attack 4: Timing Attack</strong></p>
+            <p>Measure response time to deduce information:</p>
+            <pre><code>// VULNERABLE CODE
+if (username == "admin" && password_hash == stored_hash) {
+    return "success";
+}
+// If username wrong → fast response (10ms)
+// If username correct but password wrong → slow response (100ms)
+// Hacker knows "admin" exists!</code></pre>
+            <p><strong>Defense:</strong></p>
+            <pre><code>// SECURE CODE - Always take same time
+boolean usernameMatch = constantTimeCompare(username, "admin");
+boolean passwordMatch = bcrypt.verify(password, stored_hash);
+
+if (usernameMatch && passwordMatch) {
+    return "success";
+} else {
+    Thread.sleep(random(100, 200)); // Add jitter
+    return "Invalid credentials"; // Generic message
+}</code></pre>
+
+            <h3>7. Best Practices Checklist</h3>
+
+            <ol>
+                <li><strong>✅ Never store plaintext passwords</strong></li>
+                <li><strong>✅ Use Bcrypt (cost 10-12) or Argon2id</strong></li>
+                <li><strong>✅ Salt is automatic with Bcrypt/Argon2</strong> (don't implement yourself!)</li>
+                <li><strong>✅ Enforce password strength:</strong>
+                    <ul>
+                        <li>Minimum 8 characters</li>
+                        <li>At least 1 uppercase, 1 lowercase, 1 number, 1 special char</li>
+                        <li>Check against breached password lists</li>
+                    </ul>
+                </li>
+                <li><strong>✅ Implement rate limiting:</strong>
+                    <pre><code>// Express.js with express-rate-limit
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 attempts
+    message: 'Too many login attempts, try again later'
+});</code></pre>
+                </li>
+                <li><strong>✅ Add 2FA (Two-Factor Authentication):</strong> TOTP (Google Authenticator), SMS, Email</li>
+                <li><strong>✅ Use constant-time comparison</strong> to prevent timing attacks</li>
+                <li><strong>✅ Log failed login attempts:</strong> Monitor for brute force attacks</li>
+                <li><strong>✅ Implement account lockout:</strong> After 5 failed attempts, lock for 15 minutes</li>
+                <li><strong>✅ Use HTTPS</strong> for login pages (prevent man-in-the-middle)</li>
+            </ol>
+
+            <h3>8. Password Reset Flow (Secure Implementation)</h3>
+
+            <p><strong>❌ INSECURE way:</strong></p>
+            <pre><code>// Send password in email
+"Your password is: mypassword123"
+// NEVER DO THIS!</code></pre>
+
+            <p><strong>✅ SECURE way:</strong></p>
+            <ol>
+                <li>User clicks "Forgot password"</li>
+                <li>Generate random token (32-byte random string):
+                    <pre><code>const token = crypto.randomBytes(32).toString('hex');
+// "a3f5e2c1b9d8..."</code></pre>
+                </li>
+                <li>Store token in DB with expiration (15 minutes):
+                    <pre><code>INSERT INTO password_resets (email, token, expires_at)
+VALUES ('user@example.com', 'a3f5e2c1...', NOW() + INTERVAL 15 MINUTE);</code></pre>
+                </li>
+                <li>Send email with link: <code>https://yoursite.com/reset?token=a3f5e2c1...</code></li>
+                <li>User clicks link, enters NEW password</li>
+                <li>Server verifies token is valid and not expired</li>
+                <li>Hash new password and update DB</li>
+                <li>Delete token from password_resets table</li>
+            </ol>
+
+            <h3>9. Real-world Data Breaches (Learn from mistakes)</h3>
+
+            <p><strong>Case 1: Adobe (2013) - 153 million accounts</strong></p>
+            <ul>
+                <li>Used DES encryption (not hashing!) with same key for all</li>
+                <li>No salt</li>
+                <li>Result: All passwords decrypted in days</li>
+            </ul>
+
+            <p><strong>Case 2: LinkedIn (2012) - 6.5 million accounts</strong></p>
+            <ul>
+                <li>Used SHA-1 without salt</li>
+                <li>Result: 90% cracked in hours</li>
+            </ul>
+
+            <p><strong>Case 3: Ashley Madison (2015) - 36 million accounts</strong></p>
+            <ul>
+                <li>Used Bcrypt (good!)</li>
+                <li>But also stored plaintext passwords for some accounts (WHY?!)</li>
+                <li>Result: Partial breach, massive scandal</li>
+            </ul>
+
+            <p><strong>Case 4: Facebook (2019) - 600 million accounts</strong></p>
+            <ul>
+                <li>Accidentally logged passwords in plaintext to internal logs</li>
+                <li>Accessible by 20,000 employees</li>
+                <li>Result: No external breach, but massive trust violation</li>
+            </ul>
+
+            <h3>10. Testing Your Implementation</h3>
+
+            <p><strong>Unit tests:</strong></p>
+            <pre><code>// Test 1: Hashing produces different outputs for same input
+test('bcrypt generates unique hashes', async () => {
+    const password = 'test123';
+    const hash1 = await bcrypt.hash(password, 10);
+    const hash2 = await bcrypt.hash(password, 10);
+    expect(hash1).not.toBe(hash2); // Different salts
+});
+
+// Test 2: Verification works
+test('bcrypt verifies correct password', async () => {
+    const password = 'test123';
+    const hash = await bcrypt.hash(password, 10);
+    const isValid = await bcrypt.compare(password, hash);
+    expect(isValid).toBe(true);
+});
+
+// Test 3: Wrong password fails
+test('bcrypt rejects wrong password', async () => {
+    const hash = await bcrypt.hash('correct', 10);
+    const isValid = await bcrypt.compare('wrong', hash);
+    expect(isValid).toBe(false);
+});</code></pre>
+
+            <p class="quote-box">Kết luận: Password security không phải chuyện đùa. Một lỗi nhỏ có thể dẫn đến breach ảnh hưởng millions users. Quy tắc vàng: NEVER store plaintext. ALWAYS use Bcrypt (cost 10+) hoặc Argon2. ALWAYS add rate limiting và 2FA. Và quan trọng nhất: Test kỹ implementation của bạn. Security không phải là feature bạn thêm sau, nó phải được baked in từ đầu!</p>
+        `
+    },
+    {
+        id: "git-merge-conflict",
+        title: "Git Conflict: Cơn ác mộng màn hình đỏ và cách sinh tồn",
+        date: "15/12/2025",
+        category: "work",
+        image: "images/blog/Git Merge Conflict.png",
+        summary: "Code chạy ngon trên máy mình, nhưng push lên thì đỏ lòm? Câu chuyện muôn thuở khi làm việc nhóm và văn hóa 'Pull trước khi Push'.",
+        content: `
+            <p><strong>1. Buổi tối định mệnh trước Deadline</strong></p>
+            <p>Nhóm có 2 người: Mình (Backend) và bạn A (Frontend). Cả hai hì hục code cả đêm. 5h sáng, mình commit và push code lên GitHub. Thành công.</p>
+            <p>5h05, bạn A push code lên. <strong>REJECTED.</strong></p>
+            <pre><code>To https://github.com/username/project.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/username/project.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes</code></pre>
+            <p>Bạn A hoảng loạn gọi điện: "Sao push không được? Em bị lỗi rồi!"</p>
+            <p>Mình bảo: "Pull về đi". Bạn A <code>git pull</code>. Màn hình VS Code bùng nổ:</p>
+            <pre><code>Auto-merging config.js
+CONFLICT (content): Merge conflict in config.js
+Automatic merge failed; fix conflicts and then commit the result.</code></pre>
+
+            <p>Mở file <code>config.js</code> ra, thấy:</p>
+            <pre><code><<<<<<< HEAD (Current Change)
+const API_URL = "http://localhost:3000";
+=======
+const API_URL = "http://192.168.1.100:8080";
+>>>>>>> 5f3e2c1 (Remote Change)</code></pre>
+            <p>Đây là <strong>Merge Conflict</strong>. Cả hai cùng sửa dòng code đó, Git không biết nên nghe ai.</p>
+
+            <h3>2. Tại sao Conflict xảy ra?</h3>
+
+            <p><strong>Scenario phổ biến:</strong></p>
+            <ol>
+                <li><strong>T = 0h:</strong> Cả hai pull code về, file <code>config.js</code> có dòng:
+                    <pre><code>const API_URL = "http://localhost:3000";</code></pre>
+                </li>
+                <li><strong>T = 1h-4h:</strong> Mình sửa thành <code>"http://localhost:3000"</code>, bạn A sửa thành <code>"http://192.168.1.100:8080"</code>. Cả hai đều không biết người kia đang sửa.</li>
+                <li><strong>T = 5h:</strong> Mình commit và push trước → GitHub nhận code mình.</li>
+                <li><strong>T = 5h05:</strong> Bạn A push → GitHub từ chối vì code trên server đã thay đổi (do mình push).</li>
+                <li><strong>T = 5h06:</strong> Bạn A pull về → Git merge tự động → Phát hiện conflict!</li>
+            </ol>
+
+            <p><strong>Git không thể tự động merge khi:</strong></p>
+            <ul>
+                <li>Cùng sửa <strong>cùng một dòng</strong> trong cùng một file</li>
+                <li>Một người xóa file, người kia sửa file đó</li>
+                <li>Cùng thêm code vào cùng vị trí</li>
+            </ul>
+
+            <p><strong>Git CÓ THỂ tự động merge khi:</strong></p>
+            <ul>
+                <li>Sửa <strong>khác dòng</strong> trong cùng file (ví dụ: mình sửa dòng 10, bạn A sửa dòng 50)</li>
+                <li>Sửa <strong>khác file</strong> (mình sửa <code>backend.js</code>, bạn A sửa <code>frontend.js</code>)</li>
+            </ul>
+
+            <h3>3. Bình tĩnh xử lý (Don't Panic!)</h3>
+
+            <p>Nhiều bạn newbie thấy conflict là:</p>
+            <ul>
+                <li>❌ Xóa hết project, clone lại từ đầu</li>
+                <li>❌ Copy code ra Notepad, xóa folder, paste lại</li>
+                <li>❌ Gọi thầy/bạn giỏi cứu</li>
+            </ul>
+            <p><strong>Đừng làm thế!</strong> Conflict là chuyện bình thường, mọi developer đều gặp hàng ngày.</p>
+
+            <p><strong>Quy trình xử lý từng bước:</strong></p>
+
+            <p><strong>Bước 1: Xác định files bị conflict</strong></p>
+            <pre><code>git status
+
+# Output:
+# On branch main
+# You have unmerged paths.
+#   (fix conflicts and run "git commit")
+#
+# Unmerged paths:
+#   (use "git add <file>..." to mark resolution)
+#         both modified:   config.js
+#         both modified:   utils.js</code></pre>
+
+            <p><strong>Bước 2: Mở file conflict, đọc kỹ markers</strong></p>
+            <pre><code><<<<<<< HEAD (Current Change - code của bạn)
+const API_URL = "http://localhost:3000";
+=======
+const API_URL = "http://192.168.1.100:8080";
+>>>>>>> 5f3e2c1 (Incoming Change - code từ remote)</code></pre>
+
+            <p>Giải thích:</p>
+            <ul>
+                <li><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code>: Code hiện tại trên máy bạn (local)</li>
+                <li><code>=======</code>: Dấu phân cách</li>
+                <li><code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; 5f3e2c1</code>: Code từ remote (GitHub)</li>
+            </ul>
+
+            <p><strong>Bước 3: Quyết định giữ code nào</strong></p>
+            <p>Có 3 options:</p>
+            <ul>
+                <li><strong>Option 1: Giữ code của mình (Accept Current)</strong>
+                    <pre><code>const API_URL = "http://localhost:3000";</code></pre>
+                </li>
+                <li><strong>Option 2: Giữ code của người khác (Accept Incoming)</strong>
+                    <pre><code>const API_URL = "http://192.168.1.100:8080";</code></pre>
+                </li>
+                <li><strong>Option 3: Kết hợp cả hai (Accept Both / Manual Edit)</strong>
+                    <pre><code>const API_URL = process.env.NODE_ENV === 'production' 
+    ? "http://192.168.1.100:8080"  // Production (code của bạn A)
+    : "http://localhost:3000";     // Development (code của mình)</code></pre>
+                </li>
+            </ul>
+
+            <p><strong>Bước 4: Xóa các markers của Git</strong></p>
+            <p>Sau khi quyết định, xóa hết các dòng <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>. Chỉ giữ lại code thực tế.</p>
+
+            <p><strong>Bước 5: Stage và commit</strong></p>
+            <pre><code>git add config.js utils.js
+git commit -m "Resolve merge conflicts"
+git push origin main</code></pre>
+
+            <h3>4. VS Code giúp xử lý Conflict dễ dàng hơn</h3>
+
+            <p>VS Code hiển thị conflict với UI thân thiện:</p>
+            <pre><code>// File: config.js
+const API_URL = "http://localhost:3000";
+[Accept Current Change] [Accept Incoming Change] [Accept Both Changes] [Compare Changes]</code></pre>
+
+            <p>Click vào button tương ứng, VS Code tự động xóa markers và giữ lại code bạn chọn. Siêu nhanh!</p>
+
+            <h3>5. Git Commands để xử lý Conflict</h3>
+
+            <p><strong>View conflict markers:</strong></p>
+            <pre><code>git diff --ours      # Xem code của mình
+git diff --theirs    # Xem code của người khác
+git diff --base      # Xem code gốc trước khi conflict</code></pre>
+
+            <p><strong>Choose strategy:</strong></p>
+            <pre><code># Giữ toàn bộ code của mình, bỏ code của người khác
+git checkout --ours config.js
+git add config.js
+
+# Giữ toàn bộ code của người khác, bỏ code của mình
+git checkout --theirs config.js
+git add config.js</code></pre>
+
+            <p><strong>Abort merge (quay lại trạng thái trước khi pull):</strong></p>
+            <pre><code>git merge --abort
+# Hoặc
+git reset --hard HEAD</code></pre>
+
+            <h3>6. Văn hóa Git Flow để tránh Conflict</h3>
+
+            <p>Để tránh thảm họa conflict deadline, team nên áp dụng quy tắc:</p>
+
+            <p><strong>Rule 1: Pull Before You Code</strong></p>
+            <pre><code># Mỗi sáng trước khi code:
+git pull origin main
+
+# Hoặc
+git fetch origin
+git rebase origin/main  # Prefer rebase over merge for cleaner history</code></pre>
+
+            <p><strong>Rule 2: Commit Often, Commit Small</strong></p>
+            <ul>
+                <li>❌ Code 3 ngày, commit 1 lần → Conflict khổng lồ</li>
+                <li>✅ Làm xong 1 feature nhỏ (30-60 phút) → Commit ngay</li>
+            </ul>
+            <pre><code># Bad: 1 commit cho toàn bộ feature
+git commit -m "Add login feature" (500 lines changed)
+
+# Good: Many small commits
+git commit -m "Add login UI"
+git commit -m "Add login API endpoint"
+git commit -m "Add JWT authentication"
+git commit -m "Add login validation"</code></pre>
+
+            <p><strong>Rule 3: Feature Branch Workflow</strong></p>
+            <p>Đừng ai cũng push thẳng vào <code>main</code>. Hãy tạo nhánh riêng:</p>
+            <pre><code># Tạo branch mới từ main
+git checkout -b feature/user-login
+
+# Code xong, push lên branch riêng
+git push origin feature/user-login
+
+# Tạo Pull Request trên GitHub
+# Team review code
+# Merge vào main sau khi approved</code></pre>
+
+            <p><strong>Ưu điểm:</strong></p>
+            <ul>
+                <li>Code của mỗi người isolated, không ảnh hưởng lẫn nhau</li>
+                <li>Main branch luôn stable (không bị code lỗi)</li>
+                <li>Dễ code review</li>
+                <li>Dễ rollback nếu có bug</li>
+            </ul>
+
+            <p><strong>Rule 4: Communication (Giao tiếp)</strong></p>
+            <p>Trước khi sửa một file quan trọng, hỏi trong group:</p>
+            <blockquote>"Mình sắp sửa file config.js, ai đang sửa không? Để mình sửa xong các bạn sửa sau."</blockquote>
+            <p>Điều phối thời gian để tránh conflict không cần thiết.</p>
+
+            <h3>7. Advanced: Rebase vs Merge</h3>
+
+            <p><strong>Merge (Default):</strong></p>
+            <pre><code>git pull origin main
+# = git fetch + git merge
+
+# History:
+A---B---C (main)
+     \
+      D---E (feature)
+           \
+            M (merge commit)</code></pre>
+            <p>Tạo ra merge commit, history phức tạp.</p>
+
+            <p><strong>Rebase (Clean History):</strong></p>
+            <pre><code>git pull --rebase origin main
+# = git fetch + git rebase
+
+# History:
+A---B---C (main)
+         \
+          D'---E' (feature rebased)</code></pre>
+            <p>Di chuyển commits của bạn lên đỉnh, history tuyến tính đẹp hơn.</p>
+
+            <p><strong>Khi nào dùng gì?</strong></p>
+            <ul>
+                <li><strong>Merge:</strong> Dùng cho public branches (main, develop). Preserve history.</li>
+                <li><strong>Rebase:</strong> Dùng cho feature branches cá nhân. Clean history.</li>
+            </ul>
+
+            <p class="quote-box">Golden Rule: NEVER rebase commits that have been pushed to public branches!</p>
+
+            <h3>8. Tools hỗ trợ xử lý Conflict</h3>
+
+            <p><strong>1. VS Code (Built-in):</strong></p>
+            <ul>
+                <li>Highlight conflicts với colors</li>
+                <li>One-click resolution buttons</li>
+                <li>Compare changes side-by-side</li>
+            </ul>
+
+            <p><strong>2. Git Extensions / GitKraken:</strong></p>
+            <ul>
+                <li>Visual merge tool</li>
+                <li>3-way merge view (base, ours, theirs)</li>
+                <li>Drag-and-drop resolution</li>
+            </ul>
+
+            <p><strong>3. Command line (vimdiff, meld):</strong></p>
+            <pre><code>git config --global merge.tool vimdiff
+git mergetool</code></pre>
+
+            <h3>9. Common Mistakes và Solutions</h3>
+
+            <p><strong>Mistake 1: Force push sau conflict</strong></p>
+            <pre><code># DANGER: Overwrites remote history
+git push --force origin main
+
+# Hậu quả: Xóa mất code của teammates!</code></pre>
+            <p><strong>Solution:</strong> Never force push to shared branches. Nếu bắt buộc phải force push (ví dụ sau rebase), dùng:</p>
+            <pre><code># Safer: Only force if no one else pushed
+git push --force-with-lease origin main</code></pre>
+
+            <p><strong>Mistake 2: Resolve conflict sai, commit lỗi code</strong></p>
+            <p><strong>Solution:</strong> Sau khi resolve, nhớ test kỹ:</p>
+            <pre><code># After resolving conflicts:
+npm test         # Run tests
+npm run build    # Make sure it builds
+git add .
+git commit</code></pre>
+
+            <p><strong>Mistake 3: Commit các markers vào code</strong></p>
+            <pre><code>// BAD: Forgot to remove markers
+const x = 2;
+
+// This breaks the code!</code></pre>
+            <p><strong>Solution:</strong> Luôn search toàn bộ project trước khi commit:</p>
+            <pre><code># Search for conflict markers
+grep -r "<<<<<" .
+grep -r ">>>>>" .
+grep -r "=====" .</code></pre>
+
+            <h3>10. Emergency: Conflict quá phức tạp, không giải quyết được</h3>
+
+            <p><strong>Plan A: Abort và làm lại</strong></p>
+            <pre><code>git merge --abort
+# Hoặc
+git rebase --abort
+
+# Start fresh:
+git stash  # Save your work
+git pull origin main
+git stash pop  # Re-apply your changes</code></pre>
+
+            <p><strong>Plan B: Cherry-pick từng commit</strong></p>
+            <pre><code># Lấy commit hash của code tốt
+git log --oneline
+
+# Cherry-pick từng commit một
+git cherry-pick abc123
+git cherry-pick def456</code></pre>
+
+            <p><strong>Plan C: Manual merge</strong></p>
+            <pre><code># Backup your code
+cp -r project project_backup
+
+# Reset về remote
+git reset --hard origin/main
+
+# Manually copy-paste your changes từ backup
+# Test kỹ, rồi commit</code></pre>
+
+            <p class="quote-box">Kết luận: Git Conflict không phải là lỗi, nó là tính năng. Nó ép các thành viên trong team phải giao tiếp với nhau về việc ai đang sửa gì. Master được Git conflict handling là một skill quan trọng của mọi developer. Hãy nhớ 3 nguyên tắc vàng: (1) Pull trước khi code, (2) Commit nhỏ và thường xuyên, (3) Dùng feature branches. Và quan trọng nhất: Don't panic!</p>
+        `
+    }
 ];
